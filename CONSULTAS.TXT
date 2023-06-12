@@ -1,0 +1,2 @@
+Hago tablas para usuario y paciente por separado? 
+o hago una sola con ambos(en este caso, qué hago con los atributos que le corresponden a cada clase hija? los creo en la clase padre y los inicializo nulos?)
