@@ -1,18 +1,24 @@
-import sqlite3
 
-def validar_usuario(usuario, contrasenia, tabla_usuario)->bool:
-    """ compara la contraseña ingresada con la que le corresponde al correo ingresado en la BD"""
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, select
+from clases import Persona
+engine = create_engine("sqlite:///database.db")
 
-    conn = sqlite3.connect('database-usuarios.db')
-    cursor = conn.cursor()
-    consulta = "SELECT contrasenia FROM {} WHERE correo=?".format(tabla_usuario)
-    cursor.execute(consulta, (usuario,))
-    contrasenia_encontrada = cursor.fetchone()
+def validar_usuario(usuario, contrasenia, tipo_usuario)->bool:
+    with Session(engine) as session:
+        try:
+            cons= select(Persona).where(Persona.correo == usuario)
+            persona=session.scalars(cons).one()
+            if persona.contrasenia==contrasenia and persona.tipo_usuario== tipo_usuario:
+                return True
 
-    if contrasenia_encontrada[0]==contrasenia:
-        return True
-    else:
-        raise Exception("Contraseña Incorrecta")
+        except Exception as e:
+            print("No se encuentra usuario con ese correo")
+
+
+
+
+
 
     
 

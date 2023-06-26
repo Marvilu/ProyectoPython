@@ -1,5 +1,6 @@
-from clases.clases import Paciente, Administrador
-from validaciones.validar_usuario import validar_usuario
+from clases.clases import Paciente, Turno, Administador
+from validaciones import validar_usuario, validar_admin
+from menu import menu_paciente, menu_admin
 
 def main():
     
@@ -15,6 +16,8 @@ def main():
     else:
         print("Opción invalida")
 
+        #ACCESO COMO PACIENTE
+
     if tipo_usuario=="paciente":
         opc=input(f"""Seleccione opción correspondiente:
                             1)Paciente Registrado
@@ -24,30 +27,50 @@ def main():
         if opc=="1":
             correo = input("Correo electrónico: ") 
             contrasenia=input("Contraseña: ")
-            validacion=validar_usuario(correo,contrasenia,tipo_usuario)
+            validacion=validar_usuario(correo,contrasenia,"paciente")
             if validacion == True:
                 print("Acceso Correcto")
-
-                #llevar este menu a otro modulo
-                opc=input(f"""Seleccione Acción que desea realizar:
-                            1)Modificar datos de registro
-                            2)Solicitar Turno
-                            3)Visualizar estado de asignacion de turno
-                            ->
-                         """)
-                if opc=="1":
-                    Paciente.modificar_atributos()
-                elif opc=="2":
-                    Paciente.solicitar_turno(correo)
-                elif opc=="3":
-                    Paciente.visualizar_turno(correo)
-                else:
-                    print("Opción invalida")
-        
+                menu_paciente(correo)
+              
         elif opc=="2":
-            Paciente.crear_usuario()
+            dni=Paciente.crear_usuario("paciente")
+            Paciente.enviar_mail_de_registro(correo)
         else:
             print("Opción invalida")
+
+        #ACCESO COMO ADMINISTRADOR
+
+    if tipo_usuario=="administrador":
+        acceso=False
+        codigo=input("ingrese codigo de acceso de administrador: ")
+        acceso=validar_admin(codigo)
+
+        while acceso==False:
+            acceso=validar_admin(codigo)
+            codigo=input("ingrese codigo de acceso de administrador: ")
+
+        opc=input(f"""Seleccione opción correspondiente:
+                            1)Administrador Registrado
+                            2)Crear Registro
+                            ->
+                         """)
+        
+        if opc=="1":
+            correo = input("Correo electrónico: ") 
+            contrasenia=input("Contraseña: ")
+            validacion=validar_usuario(correo,contrasenia,"administrador")
+            if validacion == True:
+                print("Acceso Correcto")
+                menu_admin(correo)
+              
+        elif opc=="2":
+            Administador.crear_usuario("administrador")
+        else:
+            print("Opción invalida")
+        
+        
+
+
 
 
 

@@ -1,2 +1,20 @@
-Hago tablas para usuario y paciente por separado? 
-o hago una sola con ambos(en este caso, qué hago con los atributos que le corresponden a cada clase hija? los creo en la clase padre y los inicializo nulos?)
+en la clase grilla me muestra el contenio como corchetes vacios???
+
+lista turnos, visualizacion de fecha y especialidad???
+
+de archivo clases:
+Usuario:
+error al crear usuarios, problemas con la clave foranea ver paciente y administrador
+
+Turno:
+consulta correcta para mostrar listado de pacientes cuyo estado_turno==False
+#traer horario desde grilla segun disponibilidad(filtrar segun registro=o con dia y especialidad)
+
+
+
+
+de archivo grilla:
+como visualizar tabla completa de grilla
+deshabilitar_turno y habilitar turno
+    #      """cambiar de o a 1 cuando se asigna turno para deshabilitar de grilla"""
+
