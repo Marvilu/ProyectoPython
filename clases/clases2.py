@@ -29,6 +29,8 @@ class Usuario(Base, order=True):
     correo:Mapped[str]
     contrasenia:Mapped[str]
     type:Mapped[str]
+    turnos: Mapped[List["Turno"]] = relationship("Turno", back_populates="paciente")
+    # turnos: Mapped[Optional[List["Turno"]]] = relationship(cascade="all", back_populates="paciente")
     correo_enviado: Mapped[Optional[bool]] =mapped_column(default=None)
     tipo_usuario: Mapped[Optional[str]] =mapped_column(default=None)
 
@@ -90,7 +92,7 @@ class Usuario(Base, order=True):
                 per_1= session.scalars(consulta).one()
                 correo_buscado=per_1.correo                               
             except Exception as e:
-                print("El nombre del usuario no se encuentra en la base de datos")
+                print("El dni del usuario no se encuentra en la base de datos")
             
             servidor = 'smtp.gmail.com'
             puerto = 587
@@ -174,9 +176,9 @@ class Turno(Base):
     
     turno_id: Mapped[int] = mapped_column(init=False, primary_key=True) #utilizo este para ordenar lista de administrador
     especialidad:Mapped[str]
-    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), init=False)
-    paciente: Mapped["Paciente"] = relationship(back_populates="turnos")
-    horario:Mapped[Optional[str]]=mapped_column(default=None)
+    horario:Mapped[str] 
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), init=False)
+    paciente: Mapped["Usuario"] = relationship(back_populates="turnos")
     estado_turno:Mapped[Optional[bool]] =mapped_column(default=False) #si =false print sin asignar, si true, mostrar turno y para filtrar en lista administrador
     
     @classmethod
@@ -189,6 +191,9 @@ class Turno(Base):
              for paciente in pacientes:                 
                 print("Id del paciente: ", paciente.paciente_id, " Especialidad requerida: ", paciente.especialidad)
 
+    __mapper_args__ = {
+        "polymorphic_identity": "turno",
+    }
 
     @classmethod
     def consulta_disponibilidad(especialidad:str, dia:str):      
@@ -202,9 +207,6 @@ class Turno(Base):
         except Exception as e:
             print(e)  
            
-       
-
-   
     @classmethod
     def asignar_turno(cls, paciente_id:str):#CORREGIR 
         """se asigna dia y hora de turno y se envia correo"""
@@ -253,13 +255,12 @@ class Turno(Base):
         #Modifica grilla horario  FUNCION NO MODIFICA TABLA
         try:
             with conexion:
-                cursor.execute(f"UPDATE {especialidad} SET {dia} = 'ocupado' WHERE horario='{hora}'")
+                cursor.execute(f"UPDATE {especialidad} SET {dia} = 'ocupado' WHERE horario={hora}")
                 conexion.commit()
                 print("El horario ha sido deshabilitado de la grilla de disponibilidad")
                 
         except Exception as e:
             print(e) 
-
 
     @classmethod
     def eliminar_turno(cls, paciente_id:str, especialidad:str):
@@ -277,26 +278,20 @@ class Turno(Base):
             #habilitar nuevamente el turno en la grilla de horarios 
         try:
             with conexion:
-                cursor.execute(f"UPDATE {especialidad} SET {dia} = 'libre' WHERE horario='{hora}'")
+                cursor.execute(f"UPDATE {especialidad} SET {dia} = 'libre' WHERE horario={hora}")
                 conexion.commit()
                 print("El horario ha sido habilitado nuevamente en la grilla de disponibilidad")
                 
         except Exception as e:
             print(e)
             
-
-
     @classmethod
     def consultar_estado_turno(cls, correo:str):
 
         with Session(engine) as session:   
-            consulta =select(cls.estado_turno).where(cls.paciente.has(Paciente.correo==correo))
-            turno= session.scalars(consulta).first()
-            if turno==0:
-                print("Turno sin asignar")
-            elif turno==1:
-                print("Turno asignado")
-
+            consulta =select(cls.horario, cls.especialidad, cls.estado_turno).where(Usuario.correo==correo)
+            turnos= session.scalars(consulta).all()
+            #quiero traer todos los turnos bajo el mismo id y mostrar estado y horario???
     
     @classmethod
     def solicitar_turno(cls, correo:str):
@@ -308,51 +303,12 @@ class Turno(Base):
                                 ->:                    """)
         
         with Session(engine) as session:        
-            paciente =session.scalars(select(Paciente).filter_by(correo=correo)).first()
+            paciente =session.scalars(select(Usuario). filter_by(correo==correo)).first()
             turno=cls(especialidad, paciente)
             session.add(turno)
             session.commit()
             print("Se ha realizado la solicitud. Cuando se asigne un turno será notificado por correo")    
    
- 
-
-@dataclass
-class Paciente(Usuario, kw_only=True):
-    __tablename__ = "paciente"
-
-    id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), init=False, primary_key=True)
-    turnos: Mapped[Optional[List["Turno"]]] = relationship(cascade="all", back_populates="paciente")
-
-    __mapper_args__ = {
-        "polymorphic_identity": "paciente"
-    }
-
-    def __post_init__(self):
-        super().__post_init__()
-
-    @classmethod
-    def buscar_por_dni(dni:str):
-        with Session(engine) as session:
-              con_1=select(Usuario).where(Usuario.dni==dni)
-              per_1= session.scalars(con_1).first()
-              print("Los datos del paciente son: ", per_1)
-
-@dataclass
-class Administador(Usuario, kw_only=True):
-    
-    __tablename__ = "administrador"
-    id_admin: Mapped[int]=mapped_column(init=False, primary_key=True)
-    id_usuario: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), init=False)
-
-    __mapper_args__ = {
-        "polymorphic_identity": "administrador"
-    }
-
-    def __post_init__(self):
-        super().__post_init__()
-    
-
-
 
         
 
@@ -365,9 +321,10 @@ cursor = conexion.cursor()
 if __name__ == "__main__":
     Base.metadata.create_all(engine) 
     try:
-        # Paciente.crear_usuario("paciente")
-        # Turno.solicitar_turno("marvilu90@gmail.com")
+        # dni=Usuario.crear_usuario("paciente")
+        # print (dni)
+        Usuario.enviar_mail_de_registro("123")
       
-        Turno.consulta_disponibilidad("clinica")
+        # Turno.consulta_disponibilidad("clinica")
     except Exception as e:
         print (e)

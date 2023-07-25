@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, select, Column, Integer, String, inspect
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy.orm import Session, declarative_base, sessionmaker, exc
 
 
 engine = create_engine("sqlite:///database-usuarios.db")
@@ -7,8 +7,7 @@ Base = declarative_base()
 
 
 class Grilla(Base):
-    nombre=input("Ingrese especialidad de la que desea generar una grilla de horarios: ")
-    especialidad= nombre 
+    especialidad=input("Ingrese especialidad de la que desea generar una grilla de horarios: ")
     __tablename__ = especialidad
     id = Column(Integer, primary_key=True)
     horario= Column(String)
@@ -21,21 +20,21 @@ class Grilla(Base):
 
     @classmethod
     def crear_grilla(cls):
-        """Crea una grilla de lunes a viernes con 4 turnos para la especialidad que se indique donde "0" es turno libre"""
+        """Crea una grilla de lunes a viernes con 4 turnos para la especialidad que se indique"""
         
+
         with Session(engine) as session:
-            grilla1 = cls(horario='9-10', lunes='0', martes='0', miercoles='0', jueves='0', viernes='0')
-            grilla2 = cls(horario='10-11', lunes='0', martes='0', miercoles='0', jueves='0', viernes='0')
-            grilla3 = cls(horario='11-12', lunes='0', martes='0', miercoles='0', jueves='0', viernes='0')
-            grilla4 = cls(horario='12-13', lunes='0', martes='0', miercoles='0', jueves='0', viernes='0')
+            grilla1 = cls(horario='9-10', lunes='libre', martes='libre', miercoles='libre', jueves='libre', viernes='libre')
+            grilla2 = cls(horario='10-11', lunes='libre', martes='libre', miercoles='libre', jueves='libre', viernes='libre')
+            grilla3 = cls(horario='11-12', lunes='libre', martes='libre', miercoles='libre', jueves='libre', viernes='libre')
+            grilla4 = cls(horario='12-13', lunes='libre', martes='libre', miercoles='libre', jueves='libre', viernes='libre')
             
             session.add_all([grilla1, grilla2, grilla3, grilla4])
             session.commit()
             print("grilla de horarios creada")
 
-    @classmethod
-    def tabla_completa(cls):
-        return "tabla completa"
+    
+        
     #
     # 
     # 
@@ -54,16 +53,14 @@ class Grilla(Base):
 
 
 
-    
-
-
 
 
 if __name__ == "__main__":
+    Base.metadata.create_all(engine) 
+
     try:
-        # Base.metadata.create_all(bind=engine)
-        # print("BD creada")
         Grilla.crear_grilla()
+        
     except Exception as e:
         print(e)
     

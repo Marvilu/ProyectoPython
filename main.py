@@ -1,6 +1,8 @@
-from clases.clases import Paciente, Turno, Administador
-from validaciones import validar_usuario, validar_admin
-from menu import menu_paciente, menu_admin
+from clases.clases import  Turno,  Usuario
+from validaciones.validar_usuario import validar_usuario
+from validaciones.validar_admin import validar_admin
+from menu.menu_paciente import menu_paciente
+from menu.menu_admin import menu_admin
 
 def main():
     
@@ -27,14 +29,14 @@ def main():
         if opc=="1":
             correo = input("Correo electrónico: ") 
             contrasenia=input("Contraseña: ")
-            validacion=validar_usuario(correo,contrasenia,"paciente")
+            validacion=validar_usuario(correo,contrasenia,tipo_usuario)
             if validacion == True:
                 print("Acceso Correcto")
                 menu_paciente(correo)
               
         elif opc=="2":
-            dni=Paciente.crear_usuario("paciente")
-            Paciente.enviar_mail_de_registro(correo)
+            dni=Usuario.crear_usuario("paciente")
+            Usuario.enviar_mail_de_registro(dni)
         else:
             print("Opción invalida")
 
@@ -64,7 +66,7 @@ def main():
                 menu_admin(correo)
               
         elif opc=="2":
-            Administador.crear_usuario("administrador")
+            Usuario.crear_usuario("administrador")
         else:
             print("Opción invalida")
         
